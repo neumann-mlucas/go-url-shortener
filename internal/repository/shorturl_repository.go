@@ -3,8 +3,9 @@ package repository
 import (
 	"database/sql"
 	"fmt"
-	"internal/model"
-	"internal/utils"
+
+	model "github.com/neumann-mlucas/go-url-shortener/internal/model"
+	utils "github.com/neumann-mlucas/go-url-shortener/internal/utils"
 )
 
 type ShortUrlRepository interface {

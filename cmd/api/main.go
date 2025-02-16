@@ -1,11 +1,10 @@
 package main
 
 import (
-	"internal/config"
-	"internal/handler"
-	"internal/middleware"
-	"internal/repository"
-	"internal/service"
+	config "github.com/neumann-mlucas/go-url-shortener/internal/config"
+	handler "github.com/neumann-mlucas/go-url-shortener/internal/handler"
+	repository "github.com/neumann-mlucas/go-url-shortener/internal/repository"
+	service "github.com/neumann-mlucas/go-url-shortener/internal/service"
 	"net/http"
 )
 

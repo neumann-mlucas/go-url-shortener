@@ -2,15 +2,16 @@ package handler
 
 import (
 	"encoding/json"
-	"internal/service"
 	"net/http"
+
+	service "github.com/neumann-mlucas/go-url-shortener/internal/service"
 )
 
 type ShortUrlHandler struct {
-	service service.ShortUrlService
+	service *service.ShortUrlService
 }
 
-func NewShortUrlHandler(service service.ShortUrlService) *ShortUrlHandler {
+func NewShortUrlHandler(service *service.ShortUrlService) *ShortUrlHandler {
 	return &ShortUrlHandler{service: service}
 }
 

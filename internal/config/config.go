@@ -3,7 +3,6 @@ package config
 import (
 	"database/sql"
 	"fmt"
-	"internal/model"
 	"log"
 
 	_ "github.com/mattn/go-sqlite3"

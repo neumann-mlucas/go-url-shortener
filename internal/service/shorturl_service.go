@@ -1,8 +1,9 @@
 package service
 
 import (
-	"internal/repository"
-	"internal/utils"
+	model "github.com/neumann-mlucas/go-url-shortener/internal/model"
+	repository "github.com/neumann-mlucas/go-url-shortener/internal/repository"
+	utils "github.com/neumann-mlucas/go-url-shortener/internal/utils"
 )
 
 type ShortUrlService struct {

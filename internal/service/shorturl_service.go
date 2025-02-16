@@ -7,18 +7,15 @@ import (
 )
 
 type ShortUrlService struct {
-	repository *repository.ShortUrlRepository
+	repository repository.ShortUrlRepository
 }
 
-func NewShortUrlService(repository *repository.ShortUrlRepository) *ShortUrlService {
+func NewShortUrlService(repository repository.ShortUrlRepository) *ShortUrlService {
 	return &ShortUrlService{repository: repository}
 }
 
 func (s *ShortUrlService) CreateShortUrl(fullurl string) error {
-	err := s.repository.CreateShortUrl(fullurl)
-	if err != nil {
-		return err
-	}
+	return s.repository.CreateShortUrl(fullurl)
 }
 
 func (s *ShortUrlService) GetShortUrl(hash string) (*model.ShortUrl, error) {
@@ -32,5 +29,5 @@ func (s *ShortUrlService) GetShortUrl(hash string) (*model.ShortUrl, error) {
 		return nil, err
 	}
 
-	return shorturl
+	return shorturl, nil
 }

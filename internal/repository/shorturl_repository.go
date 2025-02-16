@@ -9,8 +9,8 @@ import (
 )
 
 type ShortUrlRepository interface {
-	CreateShortUrl(shorturl *model.ShortUrl) error
-	GetShortUrlById(id int64) (*model.ShortUrl, error)
+	CreateShortUrl(shorturl string) error
+	GetShortUrlByID(id int64) (*model.ShortUrl, error)
 }
 
 type shortUrlRepository struct {
@@ -22,7 +22,7 @@ func NewShortUrlRepository(db *sql.DB) ShortUrlRepository {
 }
 
 func (r *shortUrlRepository) CreateShortUrl(fullurl string) error {
-	var id int
+	var id int64
 	var query string
 
 	query = "SELECT max(id) FROM urls"
@@ -32,11 +32,7 @@ func (r *shortUrlRepository) CreateShortUrl(fullurl string) error {
 	}
 
 	id += 1
-
 	hash := utils.ToHash(id)
-	if err != nil {
-		return err
-	}
 
 	query = "INSERT INTO users (id, hash, url) VALUES (?, ?, ?)"
 	result, err := r.db.Exec(query, id, hash, fullurl)

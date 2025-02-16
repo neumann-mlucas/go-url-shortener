@@ -25,14 +25,11 @@ func (h *ShortUrlHandler) CreateShortUrl(w http.ResponseWriter, r *http.Request)
 	// TODO: Try Retrieve Short Url
 
 	// Create Short Url
-	shorturl, err := h.service.CreateShortUrl(fullurl)
+	err := h.service.CreateShortUrl(fullurl)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// Write Short Url to Response Body
-	json.NewEncoder(w).Encode(shorturl)
 
 	// Write HTTP Status
 	w.WriteHeader(http.StatusCreated)

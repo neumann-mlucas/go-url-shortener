@@ -6,9 +6,9 @@ import (
 )
 
 // ToHash converts an integer ID to a base64-encoded string
-func ToHash(id int) string {
+func ToHash(id int64) string {
 	// Convert the integer ID to a string
-	idStr := strconv.Itoa(id)
+	idStr := strconv.FormatInt(id, 10)
 
 	// Convert the string to a byte slice
 	idBytes := []byte(idStr)
@@ -20,7 +20,7 @@ func ToHash(id int) string {
 }
 
 // ToID converts a base64-encoded string back to an integer
-func ToID(encodedID string) (int, error) {
+func ToID(encodedID string) (int64, error) {
 	// Decode the base64 string back to a byte slice
 	decodedBytes, err := base64.StdEncoding.DecodeString(encodedID)
 	if err != nil {
@@ -31,7 +31,7 @@ func ToID(encodedID string) (int, error) {
 	decodedStr := string(decodedBytes)
 
 	// Convert the string back to an integer
-	id, err := strconv.Atoi(decodedStr)
+	id, err := strconv.ParseInt(decodedStr, 10, 64)
 	if err != nil {
 		return 0, err // Return an error if conversion to int fails
 	}

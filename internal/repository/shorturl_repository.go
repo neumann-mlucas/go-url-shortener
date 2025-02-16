@@ -31,7 +31,9 @@ func (r *shortUrlRepository) CreateShortUrl(fullurl string) error {
 		return err
 	}
 
-	hash, err := utils.ToHash(id)
+	id += 1
+
+	hash := utils.ToHash(id)
 	if err != nil {
 		return err
 	}
@@ -44,11 +46,11 @@ func (r *shortUrlRepository) CreateShortUrl(fullurl string) error {
 }
 
 func (r *shortUrlRepository) GetShortUrlByID(id int64) (*model.ShortUrl, error) {
-	var user model.Url
+	var shorturl model.ShortUrl
 	query := "SELECT id, hash, url FROM urls WHERE id = ?"
-	err := r.db.QueryRow(query, id).Scan(&user.id, &user.hash, &user.url)
+	err := r.db.QueryRow(query, id).Scan(&shorturl.Id, &shorturl.Hash, &shorturl.Url)
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+	return &shorturl, nil
 }

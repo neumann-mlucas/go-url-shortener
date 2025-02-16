@@ -13,9 +13,9 @@ func main() {
 	config.LoadConfig()
 
 	// Initialize dependencies
-	repo := repository.NewUrlRepository(config.AppConfig.DB)
-	service := service.NewUserService(repo)
-	handler := handler.NewUserHandler(service)
+	repo := repository.NewShortUrlRepository(config.AppConfig.DB)
+	service := service.NewShortUrlService(repo)
+	handler := handler.NewShortUrlHandler(service)
 
 	// Create a new request multiplexer
 	mux := http.NewServeMux()

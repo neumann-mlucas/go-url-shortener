@@ -2,39 +2,60 @@ package util
 
 import (
 	"encoding/base64"
-	"strconv"
+	"encoding/binary"
 )
 
-// ToHash converts an integer ID to a base64-encoded string
-func ToHash(id int64) string {
-	// Convert the integer ID to a string
-	idStr := strconv.FormatInt(id, 10)
+const LEN_HASH = 8
+const CIPHER_SHIFT = 13
 
-	// Convert the string to a byte slice
-	idBytes := []byte(idStr)
-
-	// Encode the byte slice to base64 string
-	encodedID := base64.StdEncoding.EncodeToString(idBytes)
-
-	return encodedID
+// cipher ciphers inplace a byte vector using a Caesar like cipher
+func cipher(vec []byte) []byte {
+	for idx := range vec {
+		val := int(vec[idx]) + CIPHER_SHIFT + idx
+		vec[idx] = byte(val % 256)
+	}
+	return vec
 }
 
-// ToID converts a base64-encoded string back to an integer
-func ToID(encodedID string) (int64, error) {
-	// Decode the base64 string back to a byte slice
-	decodedBytes, err := base64.StdEncoding.DecodeString(encodedID)
-	if err != nil {
-		return 0, err // Return an error if decoding fails
+// decipher reverts inplace the Caesar like cipher of util.cipher
+func decipher(vec []byte) []byte {
+	for idx := range vec {
+		val := int(vec[idx]) - CIPHER_SHIFT - idx
+		vec[idx] = byte((val + 256) % 256)
 	}
+	return vec
+}
 
-	// Convert the byte slice back to a string
-	decodedStr := string(decodedBytes)
+// ToHash converts an ID integer to a base64-encoded string
+func ToHash(id uint64) (string, error) {
+	encoded := make([]byte, binary.MaxVarintLen64)
+	binary.LittleEndian.PutUint64(encoded, id)
+	return base64.StdEncoding.EncodeToString(cipher(encoded))[:LEN_HASH], nil
+}
 
-	// Convert the string back to an integer
-	id, err := strconv.ParseInt(decodedStr, 10, 64)
+// ToID converts a base64-encoded string back to an ID integer
+func ToID(hash string) (uint64, error) {
+	decoded, err := base64.StdEncoding.DecodeString(hash)
 	if err != nil {
-		return 0, err // Return an error if conversion to int fails
+		return 0, err
 	}
+	// LittleEndian requires length of binary.MaxVarintLen64
+	decoded = append(decipher(decoded), 0, 0)
+	return binary.LittleEndian.Uint64(decoded), nil
+}
 
-	return id, nil
+// IsValidHash validates a given string hash using bijection
+func IsValidHash(hash string) bool {
+	if len(hash) != LEN_HASH {
+		return false
+	}
+	id, err := ToID(hash)
+	if err != nil {
+		return false
+	}
+	rehash, err := ToHash(id)
+	if err != nil {
+		return false
+	}
+	return hash == rehash
 }

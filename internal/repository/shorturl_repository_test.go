@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -81,7 +80,6 @@ func Test_shortUrlRepository_GetShortUrlByID(t *testing.T) {
 			}
 			got, err := r.GetShortUrlByID(tt.args.id)
 			if (err != nil) != tt.wantErr {
-				fmt.Println(got)
 				t.Errorf("shortUrlRepository.GetShortUrlByID() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}

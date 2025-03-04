@@ -2,11 +2,21 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/neumann-mlucas/go-url-shortener/internal/model"
 	service "github.com/neumann-mlucas/go-url-shortener/internal/service"
 )
+
+type CreateShortUrlRequest struct {
+	FullUrl string `json:"full_url"`
+}
+
+type ShortUrlResponse struct {
+	ShortUrl string `json:"short_url"`
+}
 
 type ShortUrlHandler struct {
 	service *service.ShortUrlService
@@ -16,16 +26,30 @@ func NewShortUrlHandler(service *service.ShortUrlService) *ShortUrlHandler {
 	return &ShortUrlHandler{service: service}
 }
 
+func modelToResponse(shorturl *model.ShortUrl) ShortUrlResponse {
+	// TODO: get full api URL
+	var response ShortUrlResponse
+	response.ShortUrl = shorturl.Hash
+	return response
+}
+
 // CreateShortUrl handles the creation of a short URL and responds with a status.
 func (h *ShortUrlHandler) CreateShortUrl(w http.ResponseWriter, r *http.Request) {
 	// Set the content type to JSON
 	w.Header().Set("Content-Type", "application/json")
 
-	// Get Path Value
-	fullurl := r.PathValue("url")
+	// Get JSON payload
+	var payload CreateShortUrlRequest
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&payload)
+	if err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
 
 	// Create Short Url
-	err := h.service.CreateShortUrl(fullurl)
+	shorturl, err := h.service.CreateShortUrl(payload.FullUrl)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -33,6 +57,12 @@ func (h *ShortUrlHandler) CreateShortUrl(w http.ResponseWriter, r *http.Request)
 
 	// Write HTTP Status
 	w.WriteHeader(http.StatusCreated)
+
+	// Encode the response as JSON and send it back to the client
+	response := ShortUrlResponse{
+		ShortUrl: fmt.Sprintf("%s/%s", r.URL.Host, shorturl.Hash),
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 // GetShortUrl retrieves a short URL based on the hash and responds with the corresponding full URL.
@@ -50,11 +80,15 @@ func (h *ShortUrlHandler) GetShortUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Write Short Url to Response Body
-	json.NewEncoder(w).Encode(shorturl)
-
 	// Write HTTP Status
 	w.WriteHeader(http.StatusAccepted)
+
+	// Encode the response as JSON and send it back to the client
+	response := ShortUrlResponse{
+		ShortUrl: fmt.Sprintf("%s/%s", r.URL.Host, shorturl.Hash),
+	}
+	json.NewEncoder(w).Encode(response)
+
 }
 
 // GetShortUrls retrieves a list of short URLs with an optional limit and responds with the results.

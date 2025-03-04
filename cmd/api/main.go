@@ -18,7 +18,7 @@ func main() {
 	service := service.NewShortUrlService(repo)
 
 	urlHandler := handler.NewShortUrlHandler(service)
-	pageHandler := handler.NewPageHandler()
+	pageHandler := handler.NewPageHandler(service)
 	systemHandler := handler.NewSystemHandler()
 
 	// Create a new request multiplexer

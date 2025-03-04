@@ -1,23 +1,29 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
+
+	service "github.com/neumann-mlucas/go-url-shortener/internal/service"
 )
 
 type PageHandler struct {
+	service *service.ShortUrlService
 }
 
-func NewPageHandler() *PageHandler {
-	return &PageHandler{}
+func NewPageHandler(service *service.ShortUrlService) *PageHandler {
+	return &PageHandler{service: service}
 }
 
 func (h *PageHandler) ServeLandingPage(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "Hello, World!")
+	http.ServeFile(w, r, "static/index.html")
 }
 
 func (h *PageHandler) RedirectShortUrl(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "Hello, World!")
+	hash := r.PathValue("hash")
+	shorturl, err := h.service.GetShortUrl(hash)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, shorturl.Url, http.StatusFound)
 }

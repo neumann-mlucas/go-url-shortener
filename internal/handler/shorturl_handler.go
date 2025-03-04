@@ -52,7 +52,7 @@ func (h *ShortUrlHandler) CreateShortUrl(w http.ResponseWriter, r *http.Request)
 
 	// Encode the response as JSON and send it back to the client
 	response := ShortUrlResponse{
-		ShortUrl: fmt.Sprintf("%s/%s", r.URL.Host, shorturl.Hash),
+		ShortUrl: fmt.Sprintf("http://%s/%s", r.Host, shorturl.Hash),
 	}
 	json.NewEncoder(w).Encode(response)
 }

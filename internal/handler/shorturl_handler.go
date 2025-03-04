@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/neumann-mlucas/go-url-shortener/internal/model"
 	service "github.com/neumann-mlucas/go-url-shortener/internal/service"
 )
 
@@ -24,13 +23,6 @@ type ShortUrlHandler struct {
 
 func NewShortUrlHandler(service *service.ShortUrlService) *ShortUrlHandler {
 	return &ShortUrlHandler{service: service}
-}
-
-func modelToResponse(shorturl *model.ShortUrl) ShortUrlResponse {
-	// TODO: get full api URL
-	var response ShortUrlResponse
-	response.ShortUrl = shorturl.Hash
-	return response
 }
 
 // CreateShortUrl handles the creation of a short URL and responds with a status.
@@ -85,7 +77,7 @@ func (h *ShortUrlHandler) GetShortUrl(w http.ResponseWriter, r *http.Request) {
 
 	// Encode the response as JSON and send it back to the client
 	response := ShortUrlResponse{
-		ShortUrl: fmt.Sprintf("%s/%s", r.URL.Host, shorturl.Hash),
+		ShortUrl: fmt.Sprintf("http://%s/%s", r.Host, shorturl.Hash),
 	}
 	json.NewEncoder(w).Encode(response)
 
@@ -120,7 +112,4 @@ func (h *ShortUrlHandler) GetShortUrls(w http.ResponseWriter, r *http.Request) {
 
 	// Write Short Url to Response Body
 	json.NewEncoder(w).Encode(shorturls)
-
-	// Write HTTP Status
-	w.WriteHeader(http.StatusAccepted)
 }

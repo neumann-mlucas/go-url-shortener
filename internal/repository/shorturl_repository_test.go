@@ -25,11 +25,12 @@ func Test_shortUrlRepository_CreateShortUrl(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
+		want    int64
 		wantErr bool
 	}{
-		{"add url", args{"https://gnu.org/"}, false},
-		{"duplicated url", args{"https://gnu.org/"}, true},
-		{"add another url", args{"https://linux.org/"}, false},
+		{"add url", args{"https://gnu.org/"}, 1, false},
+		{"duplicated url", args{"https://gnu.org/"}, 0, true},
+		{"add another url", args{"https://linux.org/"}, 2, false},
 	}
 
 	// Initialize dependencies (clean in memory DB)
@@ -40,8 +41,13 @@ func Test_shortUrlRepository_CreateShortUrl(t *testing.T) {
 			r := &shortUrlRepository{
 				db: config.AppConfig.DB,
 			}
-			if err := r.CreateShortUrl(tt.args.fullurl); (err != nil) != tt.wantErr {
+			got, err := r.CreateShortUrl(tt.args.fullurl)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("shortUrlRepository.CreateShortUrl() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("shortUrlRepository.CreateShortUrl() = %v, want %v", got, tt.want)
 			}
 		})
 	}

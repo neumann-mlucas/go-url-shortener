@@ -12,7 +12,7 @@ import (
 var ErrNotFound = errors.New("value not found in the database")
 
 type ShortUrlRepository interface {
-	CreateShortUrl(shorturl string) error
+	CreateShortUrl(shorturl string) (int64, error)
 	GetShortUrlByID(id int64) (*model.ShortUrl, error)
 	GetShortUrlByHash(hash string) (*model.ShortUrl, error)
 	GetShortUrls(limit int) ([]*model.ShortUrl, error)
@@ -27,32 +27,32 @@ func NewShortUrlRepository(db *sql.DB) ShortUrlRepository {
 }
 
 // CreateShortUrl creates a new short URL entry in the database generating a unique hash for the URL
-func (r *shortUrlRepository) CreateShortUrl(fullurl string) error {
+func (r *shortUrlRepository) CreateShortUrl(fullurl string) (int64, error) {
 	var result sql.Result
 
 	insert_query := "INSERT INTO urls (hash, url) VALUES (?, ?)"
 	result, err := r.db.Exec(insert_query, "dummy", fullurl)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	hash, err := utils.ToHash(uint64(id))
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	update_query := "UPDATE urls SET hash = ? WHERE id = ?"
 	_, err = r.db.Exec(update_query, hash, id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return err
+	return id, err
 }
 
 // GetShortUrlByID retrieves a short URL record from the database by its unique ID.
@@ -89,6 +89,7 @@ func (r *shortUrlRepository) GetShortUrlByHash(hash string) (*model.ShortUrl, er
 	return &shorturl, nil
 }
 
+// GetShortUrls retrieves a list of short URLs from the database with a specified limit.
 func (r *shortUrlRepository) GetShortUrls(limit int) ([]*model.ShortUrl, error) {
 	rows, err := r.db.Query("SELECT id, hash, url, active FROM urls ORDER BY id LIMIT ?", limit)
 	if err != nil {

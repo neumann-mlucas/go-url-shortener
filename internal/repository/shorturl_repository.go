@@ -2,11 +2,14 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	model "github.com/neumann-mlucas/go-url-shortener/internal/model"
 	utils "github.com/neumann-mlucas/go-url-shortener/internal/utils"
 )
+
+var ErrNotFound = errors.New("value not found in the database")
 
 type ShortUrlRepository interface {
 	CreateShortUrl(shorturl string) error
@@ -21,32 +24,67 @@ func NewShortUrlRepository(db *sql.DB) ShortUrlRepository {
 	return &shortUrlRepository{db: db}
 }
 
+// CreateShortUrl creates a new short URL entry in the database generating a unique hash for the URL
 func (r *shortUrlRepository) CreateShortUrl(fullurl string) error {
-	var id int64
-	var query string
+	var result sql.Result
 
-	query = "SELECT max(id) FROM urls"
-	err := r.db.QueryRow(query, id).Scan(id)
+	insert_query := "INSERT INTO urls (hash, url) VALUES (?, ?)"
+	result, err := r.db.Exec(insert_query, "dummy", fullurl)
 	if err != nil {
 		return err
 	}
 
-	id += 1
-	hash := utils.ToHash(id)
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
 
-	query = "INSERT INTO users (id, hash, url) VALUES (?, ?, ?)"
-	result, err := r.db.Exec(query, id, hash, fullurl)
+	hash, err := utils.ToHash(uint64(id))
+	if err != nil {
+		return err
+	}
 
-	fmt.Println(result)
+	update_query := "UPDATE urls SET hash = ? WHERE id = ?"
+	_, err = r.db.Exec(update_query, hash, id)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
+// GetShortUrlByID retrieves a short URL record from the database by its unique ID.
 func (r *shortUrlRepository) GetShortUrlByID(id int64) (*model.ShortUrl, error) {
 	var shorturl model.ShortUrl
-	query := "SELECT id, hash, url FROM urls WHERE id = ?"
-	err := r.db.QueryRow(query, id).Scan(&shorturl.Id, &shorturl.Hash, &shorturl.Url)
+	query := "SELECT id, hash, url, active FROM urls WHERE id = ?"
+	err := r.db.QueryRow(query, id).Scan(&shorturl.Id, &shorturl.Hash, &shorturl.Url, &shorturl.Active)
+	if err != nil {
+		return nil, ErrNotFound
+	}
+	if !shorturl.Active {
+		return nil, ErrNotFound
+	}
+	return &shorturl, nil
+}
+
+// GetShortUrlByID retrieves a short URL record from the database by its unique hash.
+func (r *shortUrlRepository) GetShortUrlByHash(hash string) (*model.ShortUrl, error) {
+	var shorturl model.ShortUrl
+	id, err := utils.ToID(hash)
 	if err != nil {
 		return nil, err
 	}
+
+	query := "SELECT id, hash, url, active FROM urls WHERE id = ?"
+	err = r.db.QueryRow(query, id).Scan(&shorturl.Id, &shorturl.Hash, &shorturl.Url, &shorturl.Active)
+	if err != nil {
+		fmt.Println("ERRRIRIRR ", err, shorturl)
+		return nil, ErrNotFound
+	}
+	if !shorturl.Active {
+		fmt.Println("ERRRIRIRR ", err, shorturl)
+		return nil, ErrNotFound
+	}
+	fmt.Println(err, shorturl)
 	return &shorturl, nil
 }

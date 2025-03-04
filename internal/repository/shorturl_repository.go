@@ -14,6 +14,8 @@ var ErrNotFound = errors.New("value not found in the database")
 type ShortUrlRepository interface {
 	CreateShortUrl(shorturl string) error
 	GetShortUrlByID(id int64) (*model.ShortUrl, error)
+	GetShortUrlByHash(hash string) (*model.ShortUrl, error)
+	GetShortUrls(limit int) ([]*model.ShortUrl, error)
 }
 
 type shortUrlRepository struct {
@@ -78,13 +80,35 @@ func (r *shortUrlRepository) GetShortUrlByHash(hash string) (*model.ShortUrl, er
 	query := "SELECT id, hash, url, active FROM urls WHERE id = ?"
 	err = r.db.QueryRow(query, id).Scan(&shorturl.Id, &shorturl.Hash, &shorturl.Url, &shorturl.Active)
 	if err != nil {
-		fmt.Println("ERRRIRIRR ", err, shorturl)
 		return nil, ErrNotFound
 	}
 	if !shorturl.Active {
-		fmt.Println("ERRRIRIRR ", err, shorturl)
 		return nil, ErrNotFound
 	}
 	fmt.Println(err, shorturl)
 	return &shorturl, nil
+}
+
+func (r *shortUrlRepository) GetShortUrls(limit int) ([]*model.ShortUrl, error) {
+	rows, err := r.db.Query("SELECT id, hash, url, active FROM urls ORDER BY id LIMIT ?", limit)
+	if err != nil {
+		return nil, err
+	}
+
+	urls := []*model.ShortUrl{}
+	for rows.Next() {
+		shorturl := &model.ShortUrl{}
+		if err := rows.Scan(&shorturl.Id, &shorturl.Hash, &shorturl.Url, &shorturl.Active); err != nil {
+			return nil, err
+		}
+		urls = append(urls, shorturl)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(urls) == 0 {
+		return nil, ErrNotFound
+	}
+	return urls, nil
 }

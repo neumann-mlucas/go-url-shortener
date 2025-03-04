@@ -123,3 +123,41 @@ func Test_shortUrlRepository_GetShortUrlByHash(t *testing.T) {
 		})
 	}
 }
+
+func Test_shortUrlRepository_GetShortUrls(t *testing.T) {
+	three_urls := []*model.ShortUrl{{Id: 1, Hash: h1, Url: "https://gnu.org/", Active: true}, {Id: 2, Hash: h2, Url: "https://linux.org/", Active: true}, {Id: 3, Hash: h3, Url: "https://neovim.io/", Active: false}}
+	two_urls := []*model.ShortUrl{{Id: 1, Hash: h1, Url: "https://gnu.org/", Active: true}, {Id: 2, Hash: h2, Url: "https://linux.org/", Active: true}}
+
+	type args struct {
+		limit int
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []*model.ShortUrl
+		wantErr bool
+	}{
+		{"get all urls", args{100}, three_urls, false},
+		{"get with limit", args{2}, two_urls, false},
+	}
+
+	config.LoadTestConfig()
+	insert_query := "INSERT INTO urls (hash, url, active) VALUES (?, ?, 1), (?, ?, 1), (?, ?, 0)"
+	config.AppConfig.DB.Exec(insert_query, h1, "https://gnu.org/", h2, "https://linux.org/", h3, "https://neovim.io/")
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &shortUrlRepository{
+				db: config.AppConfig.DB,
+			}
+			got, err := r.GetShortUrls(tt.args.limit)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("shortUrlRepository.GetShortUrls() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("shortUrlRepository.GetShortUrls() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 )
 
-const LEN_HASH = 8
+const LEN_HASH = 8 // needs to be a multiple of 4
 const CIPHER_SHIFT = 13
 
 // cipher ciphers inplace a byte vector using a Caesar like cipher
@@ -35,12 +35,18 @@ func ToHash(id uint64) (string, error) {
 
 // ToID converts a base64-encoded string back to an ID integer
 func ToID(hash string) (uint64, error) {
+	// requires the input length to be a multiple of four
 	decoded, err := base64.StdEncoding.DecodeString(hash)
 	if err != nil {
 		return 0, err
 	}
+	decoded = decipher(decoded)
+
 	// LittleEndian requires length of binary.MaxVarintLen64
-	decoded = append(decipher(decoded), 0, 0)
+	for len(decoded) < binary.MaxVarintLen64 {
+		decoded = append(decoded, 0)
+	}
+
 	return binary.LittleEndian.Uint64(decoded), nil
 }
 

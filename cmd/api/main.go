@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	config "github.com/neumann-mlucas/go-url-shortener/internal/config"
@@ -11,7 +12,9 @@ import (
 
 func main() {
 	// Load config
-	config.LoadConfig()
+	if err := config.LoadConfig(); err != nil {
+		panic(err)
+	}
 
 	// Initialize dependencies
 	repo := repository.NewShortUrlRepository(config.AppConfig.DB)
@@ -38,5 +41,8 @@ func main() {
 	mux.HandleFunc("GET /doc", systemHandler.RedirectDocs)
 
 	// Start the server
-	http.ListenAndServe(":8080", mux)
+	fmt.Println("Starting server at :8080")
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		panic(err)
+	}
 }

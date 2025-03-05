@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 // Config holds the database configuration values
@@ -20,7 +20,7 @@ var AppConfig *Config
 func LoadConfig() error {
 	AppConfig = &Config{}
 
-	db, err := sql.Open("sqlite3", ":memory:")
+	db, err := sql.Open("sqlite", ":memory:")
 	if err != nil {
 		return fmt.Errorf("failed to open SQLite database: %w", err)
 	}

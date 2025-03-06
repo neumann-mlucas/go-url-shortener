@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"flag"
+	"log"
 	"net/http"
 
 	config "github.com/neumann-mlucas/go-url-shortener/internal/config"
@@ -10,13 +11,23 @@ import (
 	service "github.com/neumann-mlucas/go-url-shortener/internal/service"
 )
 
+var port string
+
+func init() {
+	flag.StringVar(&port, "port", "8080", "The port on which the server will run")
+	flag.Parse()
+}
+
 func main() {
-	// Load config
+
+	log.Println("Initalizaing App Global Config...")
+
 	if err := config.LoadConfig(); err != nil {
 		panic(err)
 	}
 
-	// Initialize dependencies
+	log.Println("Initalizaing APP services and dependencies...")
+
 	repo := repository.NewShortUrlRepository(config.AppConfig.DB)
 	service := service.NewShortUrlService(repo)
 
@@ -24,7 +35,8 @@ func main() {
 	pageHandler := handler.NewPageHandler(service)
 	systemHandler := handler.NewSystemHandler()
 
-	// Create a new request multiplexer
+	log.Println("Creating multiplexer and defining API routes")
+
 	mux := http.NewServeMux()
 
 	// Define API routes
@@ -40,9 +52,9 @@ func main() {
 	mux.HandleFunc("GET /health", systemHandler.HealthCheck)
 	mux.HandleFunc("GET /doc", systemHandler.RedirectDocs)
 
-	// Start the server
-	fmt.Println("Starting server at :8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	log.Printf("Starting server on port %s...\n", port)
+
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
 		panic(err)
 	}
 }

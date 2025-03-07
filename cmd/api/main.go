@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
 
@@ -10,13 +9,6 @@ import (
 	repository "github.com/neumann-mlucas/go-url-shortener/internal/repository"
 	service "github.com/neumann-mlucas/go-url-shortener/internal/service"
 )
-
-var port string
-
-func init() {
-	flag.StringVar(&port, "port", "8080", "The port on which the server will run")
-	flag.Parse()
-}
 
 func main() {
 
@@ -52,9 +44,9 @@ func main() {
 	mux.HandleFunc("GET /health", systemHandler.HealthCheck)
 	mux.HandleFunc("GET /doc", systemHandler.RedirectDocs)
 
-	log.Printf("Starting server on port %s...\n", port)
+	log.Printf("Starting server on port %s...\n", config.AppConfig.Port)
 
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	if err := http.ListenAndServe(config.AppConfig.Port, mux); err != nil {
 		panic(err)
 	}
 }

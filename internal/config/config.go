@@ -4,13 +4,18 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
-	_ "modernc.org/sqlite"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // Config holds the database configuration values
 type Config struct {
-	DB *sql.DB // Pointer to the SQLite in-memory database connection
+	Port   string
+	Driver string
+	URI    string
+	DB     *sql.DB
 }
 
 // Global variable to hold the app configuration
@@ -18,13 +23,27 @@ var AppConfig *Config
 
 // LoadConfig initializes the application configuration and opens the SQLite in-memory DB
 func LoadConfig() error {
-	AppConfig = &Config{}
+	port, ok := os.LookupEnv("PORT")
+	if !ok {
+		port = ":8080"
+	}
 
-	db, err := sql.Open("sqlite", ":memory:")
+	driver, ok := os.LookupEnv("DRIVER")
+	if !ok {
+		driver = "sqlite3"
+	}
+
+	uri, ok := os.LookupEnv("DATABASE_URI")
+	if !ok {
+		uri = ":memory:"
+	}
+
+	db, err := sql.Open(driver, uri)
 	if err != nil {
 		return fmt.Errorf("failed to open SQLite database: %w", err)
 	}
-	AppConfig.DB = db
+
+	AppConfig = &Config{Port: port, Driver: driver, URI: uri, DB: db}
 
 	if err := createTables(db); err != nil {
 		return fmt.Errorf("failed to create tables: %w", err)
@@ -34,18 +53,17 @@ func LoadConfig() error {
 
 // LoadTestConfig initializes the application configuration and opens the SQLite in-memory DB
 func LoadTestConfig() error {
-	AppConfig = &Config{}
-
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		return fmt.Errorf("failed to open SQLite database: %w", err)
 	}
-	AppConfig.DB = db
 
 	_, err = db.Exec("DROP TABLE IF EXISTS urls")
 	if err != nil {
 		return fmt.Errorf("failed to drop table: %w", err)
 	}
+
+	AppConfig = &Config{Port: ":8080", Driver: "sqlite3", URI: ":memory:", DB: db}
 
 	if err := createTables(db); err != nil {
 		return fmt.Errorf("failed to create tables: %w", err)

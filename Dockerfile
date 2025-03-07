@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app. The binary will be output as 'main' (you can change this to whatever name you prefer)
-RUN GOOS=linux go build -o /main /app/cmd/api/main.go
+RUN GOOS=linux go build -o /app/main /app/cmd/api/main.go
 
 # Document the port that may need to be published
 EXPOSE 8080
